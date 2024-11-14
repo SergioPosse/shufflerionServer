@@ -4,14 +4,14 @@ import (
     "shufflerion/modules/song/domain"
 )
 
-type GetSongsUseCase struct {
-    SongRepo domain.SongRepository
+type GetRandomSongsUseCase struct {
+    SongsRepo domain.SongsRepository
 }
 
-func NewGetSongsUseCase(repo domain.SongRepository) *GetSongsUseCase {
-    return &GetSongsUseCase{SongRepo: repo}
+func NewGetSongsUseCase(repo domain.SongsRepository) *GetRandomSongsUseCase {
+    return &GetRandomSongsUseCase{SongsRepo: repo}
 }
 
-func (uc *GetSongsUseCase) Execute() (*domain.Song, error) {
-    return uc.SongRepo.GetRandomSong()
+func (uc *GetRandomSongsUseCase) Execute(accessToken1 string, accessToken2 string) ([]domain.Song, error) {
+    return uc.SongsRepo.GetRandomSongs(accessToken1, accessToken2)
 }

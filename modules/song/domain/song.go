@@ -1,11 +1,11 @@
 package domain
 
 type Song struct {
-    ID     string
     Title  string
     Artist string
+    Url string
 }
 
-type SongRepository interface {
-    GetRandomSong() (*Song, error)
+type SongsRepository interface {
+    GetRandomSongs(accessToken1 string, accessToken2 string) ([] Song, error)
 }

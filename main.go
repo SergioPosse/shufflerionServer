@@ -2,21 +2,27 @@
 package main
 
 import (
-    "shufflerion/infraestructure/routes"
-    "shufflerion/infraestructure/server"
-    "shufflerion/infraestructure/controllers"
-    "shufflerion/infraestructure/services"
-    "shufflerion/modules/user/application"
+    "shufflerion/infrastructure/routes"
+    "shufflerion/infrastructure/server"
+    "shufflerion/infrastructure/controllers"
+    "shufflerion/infrastructure/services"
+    auth "shufflerion/modules/auth/application"
+    songs "shufflerion/modules/song/application"
 )
 
 func main() {
     // Inyección de dependencias para UserService
-    userService := services.NewUserService()
-    generateUserAccessLinkUC := application.NewGenerateUserAccessLinkUseCase(userService)
-    userController := controllers.NewUserController(generateUserAccessLinkUC)
+    authService := services.NewAuthService()
+    getAccessTokensUC := auth.NewGetAccessTokensUseCase(authService)
+    authController := controllers.NewAuthController(getAccessTokensUC)
+
+    // inyeccion para song controller
+    songsService := services.NewSongsService()
+    getRandomSongUC := songs.NewGetSongsUseCase(songsService)
+    songsController := controllers.NewSongsController(getRandomSongUC)
 
     // Registrar rutas
-    routes.RegisterRoutes(nil, userController)
+    routes.RegisterRoutes(authController, songsController)
 
     // Iniciar servidor
     server.StartServer()
