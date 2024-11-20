@@ -4,6 +4,7 @@ type Song struct {
     Title  string
     Artist string
     Url string
+    Image string
 }
 
 type SongsRepository interface {
