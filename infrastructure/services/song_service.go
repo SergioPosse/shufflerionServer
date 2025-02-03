@@ -16,9 +16,9 @@ func (s *SongsService) GetRandomSongs(accessToken1 string, accessToken2 string) 
 	fmt.Println("Token:", accessToken1)
 	fmt.Println("Token2:", accessToken2)
 
-	tracks1, err := FetchRandomSongs(accessToken1, 3)
+	tracks1, err := FetchRandomSongs(accessToken1, 10)
 	if len(accessToken2) > 20 {
-		tracks2, err2 := FetchRandomSongs(accessToken2, 3)
+		tracks2, err2 := FetchRandomSongs(accessToken2, 10)
 
 		if err != nil || err2 != nil {
 			var combinedErr error
