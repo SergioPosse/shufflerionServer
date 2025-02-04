@@ -6,7 +6,7 @@ import (
     "github.com/rs/cors"
 )
 
-func RegisterRoutes(authController *controllers.AuthController, songsController *controllers.SongController) {
+func RegisterRoutes(authController *controllers.AuthController, songsController *controllers.SongController, sessionController *controllers.SessionController) {
     c := cors.New(cors.Options{
         AllowedOrigins: []string{"http://localhost:3000"},
         AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
@@ -17,8 +17,15 @@ func RegisterRoutes(authController *controllers.AuthController, songsController 
 
     mux.HandleFunc("/songs/random", songsController.GetRandomSongs)
     mux.HandleFunc("/auth/tokens", authController.GetAccessTokens)
+    mux.HandleFunc("/session/create", sessionController.CreateSession)
+    mux.HandleFunc("/session/{id}", sessionController.GetSessionById)
+    mux.HandleFunc("/session/update", sessionController.UpdateSession)
 
     handler := c.Handler(mux)
 
-    http.Handle("/", handler)
+    server := &http.Server{
+        Addr:    ":8080",
+        Handler: handler,
+    }
+    server.ListenAndServe()
 }
