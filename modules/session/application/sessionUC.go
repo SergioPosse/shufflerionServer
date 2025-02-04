@@ -13,7 +13,7 @@ func NewSessionUseCase(repo domain.SessionRepository) *SessionUseCase {
 	return &SessionUseCase{repo: repo}
 }
 
-func (uc *SessionUseCase) CreateSession(ctx context.Context, session domain.CreateSession) error {
+func (uc *SessionUseCase) CreateSession(ctx context.Context, session domain.Session) error {
 	return uc.repo.CreateSession(ctx, session)
 }
 

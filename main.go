@@ -18,21 +18,22 @@ import (
 )
 
 func main() {
+	// load .env
 	err := godotenv.Load()
-if err != nil {
-    fmt.Println("Error cargando el archivo .env")
-}
-	// Inyección de dependencias para AuthService
+	if err != nil {
+			fmt.Println("Error loading .env")
+	}
+	// auth injection
 	authService := services.NewAuthService()
 	getAccessTokensUC := auth.NewGetAccessTokensUseCase(authService)
 	authController := controllers.NewAuthController(getAccessTokensUC)
 
-	// inyeccion para song controller
+	// song injection
 	songsService := services.NewSongsService()
 	getRandomSongUC := songs.NewGetSongsUseCase(songsService)
 	songsController := controllers.NewSongsController(getRandomSongUC)
 
-	// Configurar MongoDB
+	// mongo config
 	mongoURI := fmt.Sprintf(
 		"mongodb+srv://%s:%s@clusterfree.x3n59lo.mongodb.net/?retryWrites=true&w=majority&appName=ClusterFree",
 		os.Getenv("DB_MONGO_USER"),
@@ -45,14 +46,14 @@ if err != nil {
 	}
 	defer mongoDB.Close()
 
-	// Inyectar repositorio en el caso de uso
+	// session injection
 	sessionRepo := repository.NewMongoSessionRepository(mongoDB.DB)
 	sessionUseCase := session.NewSessionUseCase(sessionRepo)
 	sessionController := controllers.NewSessionController(sessionUseCase)
 
-	// Registrar rutas
+	// register routes
 	routes.RegisterRoutes(authController, songsController, sessionController)
 
-	// Iniciar servidor
+	// start server
 	server.StartServer()
 }

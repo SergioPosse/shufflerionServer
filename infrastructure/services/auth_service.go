@@ -23,18 +23,17 @@ func NewAuthService() *AuthService {
 	return &AuthService{}
 }
 
-// GetAccessTokens obtiene los tokens de acceso para dos códigos
 func (s *AuthService) GetAccessTokens(code1, code2 string) ([]shared.GetAccessTokensResponse, error) {
 	tokens := []shared.GetAccessTokensResponse{}
 
-	// Obtener el primer token
+	// get the first token
 	token1, err := s.fetchAccessToken(code1)
 	if err != nil {
 		return nil, fmt.Errorf("error obteniendo el primer access token: %v", err)
 	}
 	tokens = append(tokens, token1)
 
-	// Obtener el segundo token
+	// get the second token
 	if(len(code2) > 20){
 		token2, err := s.fetchAccessToken(code2)
 		if err != nil {
@@ -48,7 +47,7 @@ func (s *AuthService) GetAccessTokens(code1, code2 string) ([]shared.GetAccessTo
 	return tokens, nil
 }
 
-// fetchAccessToken realiza una solicitud a Spotify para obtener un access token
+// fetchAccessToken run a spotify request to obtain access token
 func (s *AuthService) fetchAccessToken(code string) (shared.GetAccessTokensResponse, error) {
 	data := url.Values{}
 	data.Set("grant_type", "authorization_code")
@@ -59,36 +58,36 @@ func (s *AuthService) fetchAccessToken(code string) (shared.GetAccessTokensRespo
 
 	req, err := http.NewRequest("POST", apiURL, strings.NewReader(data.Encode()))
 	if err != nil {
-		return shared.GetAccessTokensResponse{}, fmt.Errorf("error creando la solicitud: %v", err)
+		return shared.GetAccessTokensResponse{}, fmt.Errorf("error creating request: %v", err)
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return shared.GetAccessTokensResponse{}, fmt.Errorf("error ejecutando la solicitud: %v", err)
+		return shared.GetAccessTokensResponse{}, fmt.Errorf("error running request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return shared.GetAccessTokensResponse{}, fmt.Errorf("error leyendo la respuesta: %v", err)
+		return shared.GetAccessTokensResponse{}, fmt.Errorf("error reading response: %v", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return shared.GetAccessTokensResponse{}, fmt.Errorf("error en la solicitud, status code: %d, respuesta: %s", resp.StatusCode, body)
+		return shared.GetAccessTokensResponse{}, fmt.Errorf("error request, status code: %d, response: %s", resp.StatusCode, body)
 	}
 
 	var response map[string]interface{}
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return shared.GetAccessTokensResponse{}, fmt.Errorf("error parseando la respuesta: %v", err)
+		return shared.GetAccessTokensResponse{}, fmt.Errorf("error parsing response: %v", err)
 	}
 
 	accessToken, ok := response["access_token"].(string)
 	refreshToken, ok2 := response["refresh_token"].(string)
 	if !ok || !ok2 {
-		return shared.GetAccessTokensResponse{}, fmt.Errorf("access_token o refresh_token faltante en la respuesta")
+		return shared.GetAccessTokensResponse{}, fmt.Errorf("access_token o refresh_token missing in response")
 	}
 
 	return shared.GetAccessTokensResponse{

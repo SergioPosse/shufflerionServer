@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"shufflerion/modules/session/domain"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -19,13 +20,16 @@ func NewMongoSessionRepository(db *mongo.Database) *MongoSessionRepository {
 	}
 }
 
-// CreateSession: Crea una nueva sesión con el host y guest vacíos o con solo el host.
-func (r *MongoSessionRepository) CreateSession(ctx context.Context, session domain.CreateSession) error {
+func (r *MongoSessionRepository) CreateSession(ctx context.Context, session domain.Session) error {
+	if session.Guest == nil {
+		session.Guest = []domain.User{}
+		session.UpdatedAt = ""
+	}
+	session.CreatedAt = time.Now().Format(time.RFC3339)
 	_, err := r.collection.InsertOne(ctx, session)
 	return err
 }
 
-// GetSessionById: Obtiene una sesión por ID.
 func (r *MongoSessionRepository) GetSessionById(ctx context.Context, id string) (*domain.Session, error) {
 	var session domain.Session
 	err := r.collection.FindOne(ctx, bson.M{"id": id}).Decode(&session)
@@ -36,41 +40,40 @@ func (r *MongoSessionRepository) GetSessionById(ctx context.Context, id string) 
 }
 
 func (r *MongoSessionRepository) UpdateSession(ctx context.Context, session domain.UpdateSession) (*domain.Session, error) {
-	// Validar que session.Guest no sea nil
 	if session.Guest.Email == "" {
 		return nil, fmt.Errorf("Guest cannot be empty")
 	}
 
-	// Buscar la sesión existente por ID
 	filter := bson.M{"id": session.Id}
 
 	update := bson.M{
-		"$push": bson.M{
+		"$addToSet": bson.M{
 			"guest": session.Guest,
 		},
-		"$setOnInsert": bson.M{ // Asegura que el campo existe si no está
-			"guest": []domain.User{},
+		"$set": bson.M{
+			"updatedat": time.Now().Format(time.RFC3339),
 		},
 	}
 
-	// Realizar la actualización
 	result, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return nil, err
 	}
 
-	// Verificar si se actualizó algo
 	if result.MatchedCount == 0 {
 		return nil, fmt.Errorf("no session found with ID %v", session.Id)
 	}
 
-	// Obtener la sesión actualizada desde la base de datos
+	if result.ModifiedCount == 0 {
+		return nil, fmt.Errorf("guest with email %s already exists in the session", session.Guest.Email)
+	}
+
 	var updatedSession domain.Session
 	err = r.collection.FindOne(ctx, filter).Decode(&updatedSession)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving updated session: %v", err)
 	}
 
-	// Devolver la sesión actualizada
 	return &updatedSession, nil
 }
+

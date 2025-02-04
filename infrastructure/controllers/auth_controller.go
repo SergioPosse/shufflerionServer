@@ -22,7 +22,7 @@ func NewAuthController(getAccessTokensUC *authModule.GetAccessTokensUseCase) *Au
 func (c *AuthController) GetAccessTokens(w http.ResponseWriter, r *http.Request) {
 
     if r.Method != http.MethodPost {
-        http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
         return
     }
 
@@ -30,7 +30,7 @@ func (c *AuthController) GetAccessTokens(w http.ResponseWriter, r *http.Request)
 
     errorDecodingBody := json.NewDecoder(r.Body).Decode(&requestBody)
     if errorDecodingBody != nil {
-        http.Error(w, "Auth: Error al leer el cuerpo de la solicitud", http.StatusBadRequest)
+        http.Error(w, "Auth: Error reading request body", http.StatusBadRequest)
         return
     }
 

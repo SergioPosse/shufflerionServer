@@ -22,7 +22,7 @@ func NewSongsController(getSongsUC *songsModule.GetRandomSongsUseCase) *SongCont
 func (c *SongController) GetRandomSongs(w http.ResponseWriter, r *http.Request) {
 
     if r.Method != http.MethodPost {
-        http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
         return
     }
 
@@ -30,7 +30,7 @@ func (c *SongController) GetRandomSongs(w http.ResponseWriter, r *http.Request) 
 
     err := json.NewDecoder(r.Body).Decode(&requestBody)
     if err != nil {
-        http.Error(w, "Error al leer el cuerpo de la solicitud", http.StatusBadRequest)
+        http.Error(w, "Error reading request body", http.StatusBadRequest)
         return
     }
 

@@ -28,43 +28,39 @@ func NewSessionController(sessionUseCase *application.SessionUseCase) *SessionCo
 
 func (c *SessionController) CreateSession(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var requestBody CreateSessionRequest
 
-	// Decodificar el JSON ANTES de validar
 	errorDecodingBody := json.NewDecoder(r.Body).Decode(&requestBody)
 	if errorDecodingBody != nil {
-		http.Error(w, "Error al leer el cuerpo de la solicitud: "+errorDecodingBody.Error(), http.StatusBadRequest)
+		http.Error(w, "Error reading request body: "+errorDecodingBody.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Imprimir para depuración (ahora sí tiene datos)
 	fmt.Printf("Request Body: %+v\n", requestBody)
 
-	// Validar que los campos no estén vacíos
 	if requestBody.Id == "" || requestBody.Host.Email == "" {
-		http.Error(w, "Se requiere el ID de la sesión y el usuario anfitrión", http.StatusBadRequest)
+		http.Error(w, "sessionId and host data are mandatory", http.StatusBadRequest)
 		return
 	}
 
-	// 💡 **Verificar si ya existe una sesión con ese ID**
 	existingSession, err := c.sessionUseCase.GetSession(r.Context(), requestBody.Id)
 	if err == nil && existingSession != nil {
-		http.Error(w, "Ya existe una sesión con este ID", http.StatusConflict)
+		http.Error(w, "session already exist", http.StatusConflict)
 		return
 	}
 
-	session := domain.CreateSession{
+	session := domain.Session{
 		Id:   requestBody.Id,
 		Host: requestBody.Host,
 	}
 
 	err2 := c.sessionUseCase.CreateSession(r.Context(), session)
 	if err2 != nil {
-		http.Error(w, "Error al crear la sesión: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error creating session: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -75,19 +71,19 @@ func (c *SessionController) CreateSession(w http.ResponseWriter, r *http.Request
 
 func (c *SessionController) GetSessionById(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		http.Error(w, "Se requiere el parámetro 'id'", http.StatusBadRequest)
+		http.Error(w, "id is mandatory", http.StatusBadRequest)
 		return
 	}
 
 	session, err := c.sessionUseCase.GetSession(r.Context(), id)
 	if err != nil {
-		http.Error(w, "Error al obtener la sesión: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error retrieving the session: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -97,7 +93,7 @@ func (c *SessionController) GetSessionById(w http.ResponseWriter, r *http.Reques
 
 func (c *SessionController) UpdateSession(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
-		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -105,23 +101,23 @@ func (c *SessionController) UpdateSession(w http.ResponseWriter, r *http.Request
 
 	errorDecodingBody := json.NewDecoder(r.Body).Decode(&requestBody)
 	if errorDecodingBody != nil {
-		http.Error(w, "Error al leer el cuerpo de la solicitud", http.StatusBadRequest)
+		http.Error(w, "Error reading request body", http.StatusBadRequest)
 		return
 	}
 
 	if requestBody.Id == "" || requestBody.Guest.Email == "" {
-		http.Error(w, "Se requiere el ID de la sesión y el usuario invitado", http.StatusBadRequest)
+		http.Error(w, "sessionId and guest data are mandatory", http.StatusBadRequest)
 		return
 	}
 
 	session := domain.UpdateSession{
 		Id:    requestBody.Id,
-		Guest: requestBody.Guest, // Agregar el Guest como un array
+		Guest: requestBody.Guest,
 	}
 
 	updatedSession, err := c.sessionUseCase.UpdateSession(r.Context(), session)
 	if err != nil {
-		http.Error(w, "Error al actualizar la sesión: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error updating the session: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 

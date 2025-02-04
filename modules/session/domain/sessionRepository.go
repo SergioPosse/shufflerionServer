@@ -32,7 +32,7 @@ type UpdateSession struct {
 }
 
 type SessionRepository interface {
-	CreateSession(ctx context.Context, session CreateSession) error
+	CreateSession(ctx context.Context, session Session) error
 	GetSessionById(ctx context.Context, id string) (*Session, error)
 	UpdateSession(ctx context.Context, session UpdateSession) (*Session, error)
 }
