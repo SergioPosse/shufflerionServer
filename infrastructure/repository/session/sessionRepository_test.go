@@ -40,7 +40,7 @@ func TestMongoSessionRepository(t *testing.T) {
 
 	t.Run("CreateSession should insert a session", func(t *testing.T) {
 		session := domain.Session{Id: "123", Host: domain.User{Email: "host@test.com"}}
-		session.Guest = []domain.User{}
+		session.Guest = domain.User{}
 		err := repo.CreateSession(context.TODO(), session)
 		assert.NoError(t, err)
 
@@ -53,7 +53,7 @@ func TestMongoSessionRepository(t *testing.T) {
 
 	t.Run("GetSessionById should return the correct session", func(t *testing.T) {
 		session := domain.Session{Id: "456", Host: domain.User{Email: "host2@test.com"}}
-		session.Guest = []domain.User{}
+		session.Guest = domain.User{}
 		_ = repo.CreateSession(context.TODO(), session)
 
 		result, err := repo.GetSessionById(context.TODO(), "456")
@@ -64,7 +64,7 @@ func TestMongoSessionRepository(t *testing.T) {
 
 	t.Run("UpdateSession should update guest list", func(t *testing.T) {
 		session := domain.Session{Id: "789", Host: domain.User{Email: "host3@test.com"}}
-		session.Guest = []domain.User{}
+		session.Guest = domain.User{}
 		_ = repo.CreateSession(context.TODO(), session)
 
 		update := domain.UpdateSession{Id: "789", Guest: domain.User{Email: "guest@test.com"}}
@@ -73,8 +73,8 @@ func TestMongoSessionRepository(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, updatedSession, "updatedSession es nil")
 
-		if updatedSession != nil && len(updatedSession.Guest) > 0 {
-			assert.Equal(t, "guest@test.com", updatedSession.Guest[0].Email)
+		if updatedSession != nil{
+			assert.Equal(t, "guest@test.com", updatedSession.Guest.Email)
 		} else {
 			t.Errorf("the guest list has not be updated correctly")
 		}

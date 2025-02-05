@@ -51,8 +51,11 @@ func main() {
 	sessionUseCase := session.NewSessionUseCase(sessionRepo)
 	sessionController := controllers.NewSessionController(sessionUseCase)
 
+	// Crear servidor WebSocket
+	wsServer := server.NewWebSocketServer(mongoDB.Client)
+
 	// register routes
-	routes.RegisterRoutes(authController, songsController, sessionController)
+	routes.RegisterRoutes(authController, songsController, sessionController, wsServer)
 
 	// start server
 	server.StartServer()

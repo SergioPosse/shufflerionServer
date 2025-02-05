@@ -21,10 +21,8 @@ func NewMongoSessionRepository(db *mongo.Database) *MongoSessionRepository {
 }
 
 func (r *MongoSessionRepository) CreateSession(ctx context.Context, session domain.Session) error {
-	if session.Guest == nil {
-		session.Guest = []domain.User{}
-		session.UpdatedAt = ""
-	}
+	session.Guest = domain.User{}
+	session.UpdatedAt = ""
 	session.CreatedAt = time.Now().Format(time.RFC3339)
 	_, err := r.collection.InsertOne(ctx, session)
 	return err
@@ -41,16 +39,14 @@ func (r *MongoSessionRepository) GetSessionById(ctx context.Context, id string) 
 
 func (r *MongoSessionRepository) UpdateSession(ctx context.Context, session domain.UpdateSession) (*domain.Session, error) {
 	if session.Guest.Email == "" {
-		return nil, fmt.Errorf("Guest cannot be empty")
+		return nil, fmt.Errorf("guest cannot be empty")
 	}
 
 	filter := bson.M{"id": session.Id}
 
 	update := bson.M{
-		"$addToSet": bson.M{
-			"guest": session.Guest,
-		},
 		"$set": bson.M{
+			"guest":     session.Guest,
 			"updatedat": time.Now().Format(time.RFC3339),
 		},
 	}
@@ -76,4 +72,3 @@ func (r *MongoSessionRepository) UpdateSession(ctx context.Context, session doma
 
 	return &updatedSession, nil
 }
-

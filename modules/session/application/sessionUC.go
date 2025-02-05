@@ -24,4 +24,3 @@ func (uc *SessionUseCase) GetSession(ctx context.Context, id string) (*domain.Se
 func (uc *SessionUseCase) UpdateSession(ctx context.Context, session domain.UpdateSession) (*domain.Session, error) {
 	return uc.repo.UpdateSession(ctx, session)
 }
-

@@ -15,19 +15,19 @@ type User struct {
 type Session struct {
 	Id        string
 	Host      User
-	Guest     []User
+	Guest     User
 	CreatedAt string
 	UpdatedAt string
 }
 
 type CreateSession struct {
-	Id string
+	Id   string
 	Host User
 }
 
 type UpdateSession struct {
-	Id string
-	Guest User
+	Id        string
+	Guest     User
 	UpdatedAt string
 }
 
