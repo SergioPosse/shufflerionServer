@@ -6,21 +6,31 @@ import (
 )
 
 type SessionUseCase struct {
-	repo domain.SessionRepository
+	sessionRepository domain.SessionRepository
+	spotifyService domain.SpotifyService
 }
 
-func NewSessionUseCase(repo domain.SessionRepository) *SessionUseCase {
-	return &SessionUseCase{repo: repo}
+func NewSessionUseCase(repository domain.SessionRepository, spotify domain.SpotifyService) *SessionUseCase {
+	return &SessionUseCase{sessionRepository: repository}
 }
 
 func (uc *SessionUseCase) CreateSession(ctx context.Context, session domain.Session) error {
-	return uc.repo.CreateSession(ctx, session)
+	err := uc.sessionRepository.CreateSession(ctx, session)
+	if err != nil {
+		return err
+	}
+
+	res , err := uc.spotifyService.AddUserToApp(session.Host.Tokens.AccessToken, session.Host.Email)
+	if err != nil || res {
+		return err
+	}
+	return err
 }
 
 func (uc *SessionUseCase) GetSession(ctx context.Context, id string) (*domain.Session, error) {
-	return uc.repo.GetSessionById(ctx, id)
+	return uc.sessionRepository.GetSessionById(ctx, id)
 }
 
 func (uc *SessionUseCase) UpdateSession(ctx context.Context, session domain.UpdateSession) (*domain.Session, error) {
-	return uc.repo.UpdateSession(ctx, session)
+	return uc.sessionRepository.UpdateSession(ctx, session)
 }

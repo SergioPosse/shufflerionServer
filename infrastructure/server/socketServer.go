@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -21,6 +22,7 @@ var upgrader = websocket.Upgrader{
 type WebSocketServer struct {
 	conn        *websocket.Conn
 	mongoClient *mongo.Client
+	sessionID   string
 }
 
 func NewWebSocketServer(mongoClient *mongo.Client) *WebSocketServer {
@@ -38,17 +40,37 @@ func (wsServer *WebSocketServer) HandleConnection(w http.ResponseWriter, r *http
 
 	log.Println("Cliente conectado")
 
-	// Escuchar cambios en MongoDB
-	wsServer.listenForSessionUpdates()
+	// Leer el mensaje inicial para obtener el sessionId
+	_, msg, err := wsServer.conn.ReadMessage()
+	if err != nil {
+		log.Printf("Error leyendo mensaje inicial: %v", err)
+		return
+	}
+
+	var message struct {
+		Action    string `json:"action"`
+		SessionID string `json:"sessionId"`
+	}
+	if err := json.Unmarshal(msg, &message); err != nil {
+		log.Printf("Error decodificando mensaje: %v", err)
+		return
+	}
+
+	if message.Action == "subscribe" && message.SessionID != "" {
+		wsServer.sessionID = message.SessionID
+		log.Printf("Suscrito a actualizaciones de la sesión: %s", wsServer.sessionID)
+		wsServer.listenForSessionUpdates()
+	} else {
+		log.Println("Mensaje de suscripción inválido")
+	}
 }
 
 func (wsServer *WebSocketServer) listenForSessionUpdates() {
-	ctx, cancel := context.WithCancel(context.Background()) // Usamos un contexto con cancelación
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	collection := wsServer.mongoClient.Database("shufflerion").Collection("session")
 
-	// Crear el change stream para detectar actualizaciones
 	changeStream, err := collection.Watch(ctx, mongo.Pipeline{}, options.ChangeStream().SetFullDocument(options.UpdateLookup))
 	if err != nil {
 		log.Fatalf("Error creando Change Stream: %v", err)
@@ -72,19 +94,14 @@ func (wsServer *WebSocketServer) listenForSessionUpdates() {
 			continue
 		}
 
-		// Verificar si el campo "guest" fue actualizado y ya no está vacío
-		if change.OperationType == "update" {
+		// Filtrar por el sessionId suscrito
+		if change.FullDocument.SessionID == wsServer.sessionID && change.OperationType == "update" {
 			if guest, ok := change.UpdateDescription.UpdatedFields["guest"]; ok {
-				// Verificamos que "guest" es un objeto (no un array)
 				if user, ok := guest.(map[string]interface{}); ok {
-					// Aquí puedes acceder a las propiedades del usuario, por ejemplo, el email
 					if email, ok := user["email"].(string); ok {
-						log.Printf("Usuario en guest: %s", email)
+						log.Printf("Usuario en guest actualizado: %s", email)
 					}
-				} else {
-					log.Printf("El campo 'guest' no es un objeto válido para sessionId %s", change.FullDocument.SessionID)
 				}
-				// Notificamos al cliente con la sesión actualizada
 				wsServer.notifyClient(change.FullDocument)
 			}
 		}
@@ -101,7 +118,7 @@ func (wsServer *WebSocketServer) notifyClient(session interface{}) {
 	}
 
 	message := map[string]interface{}{
-		"event": "guest__joined",
+		"event": "guest_joined",
 		"data":  session,
 	}
 

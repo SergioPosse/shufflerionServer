@@ -6,21 +6,16 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
+	config "shufflerion/infrastructure/server/config"
 	"shufflerion/modules/auth/domain"
+	"strings"
 )
+type AuthService struct{
+	config *config.Config
+}
 
-const (
-	apiURL      = "https://accounts.spotify.com/api/token"
-	redirectURI = "http://localhost:3000/callback"
-	clientID    = "335ea7b32dd24009bd0529ba85f0f8cc"
-	clientSecret = "b482ee9f0aa4408da21b224d59c2d445"
-)
-
-type AuthService struct{}
-
-func NewAuthService() *AuthService {
-	return &AuthService{}
+func NewAuthService(cfg *config.Config) *AuthService {
+	return &AuthService{config: cfg}
 }
 
 func (s *AuthService) GetAccessTokens(code1, code2 string) ([]shared.GetAccessTokensResponse, error) {
@@ -52,11 +47,11 @@ func (s *AuthService) fetchAccessToken(code string) (shared.GetAccessTokensRespo
 	data := url.Values{}
 	data.Set("grant_type", "authorization_code")
 	data.Set("code", code)
-	data.Set("redirect_uri", redirectURI)
-	data.Set("client_id", clientID)
-	data.Set("client_secret", clientSecret)
+	data.Set("redirect_uri", s.config.RedirectURI)
+	data.Set("client_id", s.config.ClientID)
+	data.Set("client_secret", s.config.ClientSecret)
 
-	req, err := http.NewRequest("POST", apiURL, strings.NewReader(data.Encode()))
+	req, err := http.NewRequest("POST", s.config.APIURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return shared.GetAccessTokensResponse{}, fmt.Errorf("error creating request: %v", err)
 	}
