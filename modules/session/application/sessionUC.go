@@ -11,7 +11,7 @@ type SessionUseCase struct {
 }
 
 func NewSessionUseCase(repository domain.SessionRepository, spotify domain.SpotifyService) *SessionUseCase {
-	return &SessionUseCase{sessionRepository: repository}
+	return &SessionUseCase{sessionRepository: repository, spotifyService: spotify}
 }
 
 func (uc *SessionUseCase) CreateSession(ctx context.Context, session domain.Session) error {

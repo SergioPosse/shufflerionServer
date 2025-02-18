@@ -84,7 +84,7 @@ func TestMongoSessionRepository(t *testing.T) {
 		update := domain.UpdateSession{Id: "999", Guest: domain.User{}}
 		_, err := repo.UpdateSession(context.TODO(), update)
 		assert.Error(t, err)
-		assert.Equal(t, "Guest cannot be empty", err.Error())
+		assert.Equal(t, "guest cannot be empty", err.Error())
 	})
 
 	t.Run("UpdateSession should return error if session not found", func(t *testing.T) {
