@@ -14,7 +14,6 @@ type Config struct {
 	ClientSecret string
 }
 
-// NewConfig carga las variables de entorno y devuelve la configuración
 func NewConfig() (*Config, error) {
 	cfg := &Config{
 		APIURL:       os.Getenv("SPOTIFY_API_URL_TOKEN"),
@@ -25,9 +24,8 @@ func NewConfig() (*Config, error) {
 		ClientSecret: os.Getenv("SPOTIFY_CLIENT_SECRET"),
 	}
 
-	// Validar que todas las variables estén configuradas
 	if cfg.APIURL == "" || cfg.RedirectURI == "" || cfg.ClientID == "" || cfg.ClientSecret == "" || cfg.APIURL_ADD_USER == "" || cfg.APIURL_GET_SONGS == ""{
-		return nil, fmt.Errorf("error: faltan variables de entorno necesarias")
+		return nil, fmt.Errorf("error: missing environment variables")
 	}
 
 	return cfg, nil

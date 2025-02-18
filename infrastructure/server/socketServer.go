@@ -33,17 +33,16 @@ func (wsServer *WebSocketServer) HandleConnection(w http.ResponseWriter, r *http
 	var err error
 	wsServer.conn, err = upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("Error al actualizar a WebSocket: %v", err)
+		log.Printf("error updating websocket: %v", err)
 		return
 	}
 	defer wsServer.conn.Close()
 
-	log.Println("Cliente conectado")
+	log.Println("client connected")
 
-	// Leer el mensaje inicial para obtener el sessionId
 	_, msg, err := wsServer.conn.ReadMessage()
 	if err != nil {
-		log.Printf("Error leyendo mensaje inicial: %v", err)
+		log.Printf("error reading initial message: %v", err)
 		return
 	}
 
@@ -52,16 +51,16 @@ func (wsServer *WebSocketServer) HandleConnection(w http.ResponseWriter, r *http
 		SessionID string `json:"sessionId"`
 	}
 	if err := json.Unmarshal(msg, &message); err != nil {
-		log.Printf("Error decodificando mensaje: %v", err)
+		log.Printf("error decoding message: %v", err)
 		return
 	}
 
 	if message.Action == "subscribe" && message.SessionID != "" {
 		wsServer.sessionID = message.SessionID
-		log.Printf("Suscrito a actualizaciones de la sesión: %s", wsServer.sessionID)
+		log.Printf("suscribed to session updates: %s", wsServer.sessionID)
 		wsServer.listenForSessionUpdates()
 	} else {
-		log.Println("Mensaje de suscripción inválido")
+		log.Println("invalid subscription messsage")
 	}
 }
 
@@ -73,7 +72,7 @@ func (wsServer *WebSocketServer) listenForSessionUpdates() {
 
 	changeStream, err := collection.Watch(ctx, mongo.Pipeline{}, options.ChangeStream().SetFullDocument(options.UpdateLookup))
 	if err != nil {
-		log.Fatalf("Error creando Change Stream: %v", err)
+		log.Fatalf("error creating change stream: %v", err)
 	}
 	defer changeStream.Close(ctx)
 
@@ -90,16 +89,15 @@ func (wsServer *WebSocketServer) listenForSessionUpdates() {
 		}
 
 		if err := changeStream.Decode(&change); err != nil {
-			log.Printf("Error decodificando cambio: %v", err)
+			log.Printf("error decoding change: %v", err)
 			continue
 		}
 
-		// Filtrar por el sessionId suscrito
 		if change.FullDocument.SessionID == wsServer.sessionID && change.OperationType == "update" {
 			if guest, ok := change.UpdateDescription.UpdatedFields["guest"]; ok {
 				if user, ok := guest.(map[string]interface{}); ok {
 					if email, ok := user["email"].(string); ok {
-						log.Printf("Usuario en guest actualizado: %s", email)
+						log.Printf("guest user updated: %s", email)
 					}
 				}
 				wsServer.notifyClient(change.FullDocument)
@@ -108,7 +106,7 @@ func (wsServer *WebSocketServer) listenForSessionUpdates() {
 	}
 
 	if err := changeStream.Err(); err != nil {
-		log.Printf("Error en el Change Stream: %v", err)
+		log.Printf("change stream error: %v", err)
 	}
 }
 
@@ -124,6 +122,6 @@ func (wsServer *WebSocketServer) notifyClient(session interface{}) {
 
 	err := wsServer.conn.WriteJSON(message)
 	if err != nil {
-		log.Printf("Error enviando mensaje al cliente: %v", err)
+		log.Printf("error sending message to client: %v", err)
 	}
 }

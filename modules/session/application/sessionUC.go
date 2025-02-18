@@ -20,10 +20,10 @@ func (uc *SessionUseCase) CreateSession(ctx context.Context, session domain.Sess
 		return err
 	}
 
-	res , err := uc.spotifyService.AddUserToApp(session.Host.Tokens.AccessToken, session.Host.Email)
-	if err != nil || res {
-		return err
-	}
+	// res , err := uc.spotifyService.AddUserToApp(session.Host.Tokens.AccessToken, session.Host.Email)
+	// if err != nil || res {
+	// 	return err
+	// }
 	return err
 }
 

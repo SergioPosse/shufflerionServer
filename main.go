@@ -7,7 +7,6 @@ import (
 	"shufflerion/infrastructure/controllers"
 	"shufflerion/infrastructure/db"
 	repository "shufflerion/infrastructure/repository/session"
-	service "shufflerion/infrastructure/services"
 	"shufflerion/infrastructure/routes"
 	"shufflerion/infrastructure/server"
 	"shufflerion/infrastructure/services"
@@ -27,14 +26,14 @@ func main() {
 			fmt.Println("Error loading .env")
 	}
 
-	// Cargar configuración
+	// load config
 	cfg, err := config.NewConfig()
 	if err != nil {
 		log.Fatalf("Error cargando configuración: %v", err)
 	}
 
-	// instancia spotify Service
-	spotifyService := service.NewSpotifyService(cfg)
+	// spotify service
+	spotifyService := services.NewSpotifyService(cfg)
 
 	// auth injection
 	authService := services.NewAuthService(cfg)
@@ -64,7 +63,7 @@ func main() {
 	sessionUseCase := session.NewSessionUseCase(sessionRepo, spotifyService)
 	sessionController := controllers.NewSessionController(sessionUseCase)
 
-	// Crear servidor WebSocket
+	// create webSocket server
 	wsServer := server.NewWebSocketServer(mongoDB.Client)
 
 	// register routes

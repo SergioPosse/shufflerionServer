@@ -50,30 +50,30 @@ func (s *SpotifyService) FetchRandomSongs(accessToken string, quantity int) ([]d
 
 	firstRequest, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("error creando la solicitud para obtener el total de pistas: %v", err)
+		return nil, fmt.Errorf("error creating request for get tracks: %v", err)
 	}
 	firstRequest.Header.Set("Authorization", "Bearer "+accessToken)
 
 	resp, err := client.Do(firstRequest)
 	if err != nil {
-		return nil, fmt.Errorf("error al hacer la solicitud inicial: %v", err)
+		return nil, fmt.Errorf("error in initial request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	var firstResponse SpotifyResponse
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error al leer la respuesta: %v", err)
+		return nil, fmt.Errorf("error reading response: %v", err)
 	}
 
 	err = json.Unmarshal(body, &firstResponse)
 	if err != nil {
-		return nil, fmt.Errorf("error al parsear la respuesta: %v", err)
+		return nil, fmt.Errorf("error parsing response: %v", err)
 	}
 
 	totalTracks := firstResponse.Total
 	if totalTracks == 0 {
-		return nil, fmt.Errorf("no se encontraron pistas en la cuenta")
+		return nil, fmt.Errorf("there is no tracks in the account")
 	}
 
 	randSource := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -84,24 +84,24 @@ func (s *SpotifyService) FetchRandomSongs(accessToken string, quantity int) ([]d
 
 		request, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			return nil, fmt.Errorf("error creando la solicitud para obtener las pistas: %v", err)
+			return nil, fmt.Errorf("error creating request for get tracks: %v", err)
 		}
 		request.Header.Set("Authorization", "Bearer "+accessToken)
 		resp, err := client.Do(request)
 		if err != nil {
-			return nil, fmt.Errorf("error al hacer la solicitud de pistas: %v", err)
+			return nil, fmt.Errorf("error in getting tracks request: %v", err)
 		}
 		defer resp.Body.Close()
 
 		var response SpotifyResponse
 		body, err = io.ReadAll(resp.Body)
 		if err != nil {
-			return nil, fmt.Errorf("error al leer la respuesta de pistas: %v", err)
+			return nil, fmt.Errorf("error reading tracks response: %v", err)
 		}
 
 		err = json.Unmarshal(body, &response)
 		if err != nil {
-			return nil, fmt.Errorf("error al parsear la respuesta de pistas: %v", err)
+			return nil, fmt.Errorf("error parsing tracks response: %v", err)
 		}
 
 		for _, item := range response.Items {
@@ -118,6 +118,7 @@ func (s *SpotifyService) FetchRandomSongs(accessToken string, quantity int) ([]d
 	return tracks, nil
 }
 
+// not used method but probably used in production mode when spotify dev team give me feedback and approve my app
 func (s *SpotifyService) AddUserToApp(accessToken string, email string) (bool, error) {
 	client := &http.Client{}
 
@@ -126,7 +127,6 @@ func (s *SpotifyService) AddUserToApp(accessToken string, email string) (bool, e
 		return false, fmt.Errorf("SPOTIFY_CLIENT_ID no está definido en las variables de entorno")
 	}
 
-	// Crear el payload en formato JSON
 	payload := map[string]string{
 		"clientId": clientId,
 		"email":    email,
@@ -134,30 +134,26 @@ func (s *SpotifyService) AddUserToApp(accessToken string, email string) (bool, e
 	}
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
-		return false, fmt.Errorf("error serializando JSON: %v", err)
+		return false, fmt.Errorf("error serializing JSON: %v", err)
 	}
 
-	// Crear la solicitud HTTP correcta
 	url := s.config.APIURL_ADD_USER + clientId + "/users"
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return false, fmt.Errorf("error creando la solicitud HTTP: %v", err)
+		return false, fmt.Errorf("error creating http request: %v", err)
 	}
 
-	// Agregar encabezados
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Content-Type", "application/json")
 
-	// Enviar la solicitud
 	resp, err := client.Do(req)
 	if err != nil {
-		return false, fmt.Errorf("error al hacer la solicitud: %v", err)
+		return false, fmt.Errorf("error in request: %v", err)
 	}
 	defer resp.Body.Close()
 
-	// Validar respuesta
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return false, fmt.Errorf("error en la respuesta de la API: %s", resp.Status)
+		return false, fmt.Errorf("error in API response: %s", resp.Status)
 	}
 
 	return true, nil

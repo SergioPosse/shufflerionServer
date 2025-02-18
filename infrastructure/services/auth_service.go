@@ -24,19 +24,19 @@ func (s *AuthService) GetAccessTokens(code1, code2 string) ([]shared.GetAccessTo
 	// get the first token
 	token1, err := s.fetchAccessToken(code1)
 	if err != nil {
-		return nil, fmt.Errorf("error obteniendo el primer access token: %v", err)
+		return nil, fmt.Errorf("error getting first access token: %v", err)
 	}
 	tokens = append(tokens, token1)
 
-	// get the second token
-	if(len(code2) > 20){
+	// get the second token if there is one, otherwise only get songs from user1
+	if(code2 != ""){
 		token2, err := s.fetchAccessToken(code2)
 		if err != nil {
-			return nil, fmt.Errorf("error obteniendo el segundo access token: %v", err)
+			return nil, fmt.Errorf("error getting second access token: %v", err)
 		}
 		tokens = append(tokens, token2)
 	} else {
-		tokens = append(tokens, shared.GetAccessTokensResponse{AccessToken: "asd", RefreshToken: "asd"})
+		tokens = append(tokens, shared.GetAccessTokensResponse{AccessToken: "notoken", RefreshToken: "notoken"})
 	}
 
 	return tokens, nil
