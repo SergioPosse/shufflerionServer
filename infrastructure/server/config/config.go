@@ -18,7 +18,7 @@ func NewConfig() (*Config, error) {
 	cfg := &Config{
 		APIURL:       os.Getenv("SPOTIFY_API_URL_TOKEN"),
 		APIURL_GET_SONGS: os.Getenv("SPOTIFY_API_URL_GET_SONGS"),
-		APIURL_ADD_USER: os.Getenv("SPOTIFY_API_URL_APP_AD_USER"),
+		APIURL_ADD_USER: os.Getenv("SPOTIFY_API_URL_APP_ADD_USER"),
 		RedirectURI:  os.Getenv("SPOTIFY_REDIRECT_URI"),
 		ClientID:     os.Getenv("SPOTIFY_CLIENT_ID"),
 		ClientSecret: os.Getenv("SPOTIFY_CLIENT_SECRET"),

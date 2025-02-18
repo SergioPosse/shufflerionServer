@@ -29,18 +29,18 @@ func main() {
 	// load config
 	cfg, err := config.NewConfig()
 	if err != nil {
-		log.Fatalf("Error cargando configuración: %v", err)
+		log.Fatalf("error loading configuration: %v", err)
 	}
 
 	// spotify service
 	spotifyService := services.NewSpotifyService(cfg)
 
-	// auth injection
+	// auth module injection
 	authService := services.NewAuthService(cfg)
 	getAccessTokensUC := auth.NewGetAccessTokensUseCase(authService)
 	authController := controllers.NewAuthController(getAccessTokensUC)
 
-	// song injection
+	// song module injection
 	songsService := services.NewSongsService(spotifyService)
 	getRandomSongUC := songs.NewGetSongsUseCase(songsService)
 	songsController := controllers.NewSongsController(getRandomSongUC)
@@ -58,7 +58,7 @@ func main() {
 	}
 	defer mongoDB.Close()
 
-	// session injection
+	// session module injection
 	sessionRepo := repository.NewMongoSessionRepository(mongoDB.DB)
 	sessionUseCase := session.NewSessionUseCase(sessionRepo, spotifyService)
 	sessionController := controllers.NewSessionController(sessionUseCase)
@@ -67,8 +67,8 @@ func main() {
 	wsServer := server.NewWebSocketServer(mongoDB.Client)
 
 	// register routes
-	routes.RegisterRoutes(authController, songsController, sessionController, wsServer)
+	serverWithRoutes := routes.RegisterRoutes(authController, songsController, sessionController, wsServer)
 
 	// start server
-	server.StartServer()
+	server.StartServer(serverWithRoutes)
 }

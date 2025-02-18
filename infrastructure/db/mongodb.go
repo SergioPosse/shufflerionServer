@@ -22,16 +22,15 @@ func NewMongoDB(uri, dbName string) (*MongoDB, error) {
 
 	client, err := mongo.Connect(ctx, clientOpts)
 	if err != nil {
-		return nil, fmt.Errorf("error connecting to MongoDB: %w", err)
+		return nil, fmt.Errorf("❌ Error connecting to MongoDB: %w", err)
 	}
 
-	// Verificar conexión
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("error pinging MongoDB: %w", err)
+		return nil, fmt.Errorf("❌ Error pinging MongoDB: %w", err)
 	}
 
-	fmt.Println("Connected to MongoDB Atlas!")
+	fmt.Println("✅ Connected to MongoDB Atlas!")
 	return &MongoDB{
 		Client: client,
 		DB:     client.Database(dbName),
@@ -40,8 +39,8 @@ func NewMongoDB(uri, dbName string) (*MongoDB, error) {
 
 func (m *MongoDB) Close() {
 	if err := m.Client.Disconnect(context.Background()); err != nil {
-		log.Println("Error closing MongoDB connection:", err)
+		log.Println("❌ Error closing MongoDB connection:", err)
 	} else {
-		fmt.Println("MongoDB connection closed.")
+		fmt.Println("❌ MongoDB connection closed.")
 	}
 }
