@@ -36,7 +36,7 @@ func (s *AuthService) GetAccessTokens(code1, code2 string) ([]shared.GetAccessTo
 		}
 		tokens = append(tokens, token2)
 	} else {
-		tokens = append(tokens, shared.GetAccessTokensResponse{AccessToken: "notoken", RefreshToken: "notoken"})
+		tokens = append(tokens, shared.GetAccessTokensResponse{AccessToken: "notokensetted", RefreshToken: "notokensetted"})
 	}
 
 	return tokens, nil

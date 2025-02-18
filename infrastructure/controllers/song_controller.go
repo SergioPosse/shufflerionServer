@@ -37,8 +37,8 @@ func (c *SongController) GetRandomSongs(w http.ResponseWriter, r *http.Request) 
     accessToken1 := requestBody.AccessToken1
     accessToken2 := requestBody.AccessToken2
 
-    if accessToken1 == "" || accessToken2 == "" {
-        http.Error(w, "Both accessToken1 and accessToken2 parameters are required", http.StatusBadRequest)
+    if accessToken1 == "" {
+        http.Error(w, "ccessToken1 is required", http.StatusBadRequest)
         return
     }
 

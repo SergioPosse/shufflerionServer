@@ -37,12 +37,17 @@ func (c *AuthController) GetAccessTokens(w http.ResponseWriter, r *http.Request)
     code1 := requestBody.Code1
     code2 := requestBody.Code2
 
-    if code1 == "" || code2 == "" {
-        http.Error(w, "Both code1 and code2 parameters are required", http.StatusBadRequest)
+    if code1 == "" {
+        http.Error(w, "code1 is required", http.StatusBadRequest)
         return
     }
 
     access_tokens := c.GetAccessTokensUC.Execute(code1, code2)
+
+    if access_tokens == nil {
+        http.Error(w, "Failed to retrieve access tokens", http.StatusInternalServerError)
+        return
+    }
 
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(access_tokens)
