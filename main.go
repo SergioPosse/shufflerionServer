@@ -21,9 +21,11 @@ import (
 func main() {
 
 	// load .env
-	err := godotenv.Load()
-	if err != nil {
+	if os.Getenv("ENV") == "development" {
+		err := godotenv.Load()
+		if err != nil {
 			fmt.Println("Error loading .env")
+		}
 	}
 
 	// load config
