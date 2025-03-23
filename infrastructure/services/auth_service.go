@@ -7,10 +7,11 @@ import (
 	"net/http"
 	"net/url"
 	config "shufflerion/infrastructure/server/config"
-	"shufflerion/modules/auth/domain"
+	shared "shufflerion/modules/auth/domain"
 	"strings"
 )
-type AuthService struct{
+
+type AuthService struct {
 	config *config.Config
 }
 
@@ -29,7 +30,7 @@ func (s *AuthService) GetAccessTokens(code1, code2 string) ([]shared.GetAccessTo
 	tokens = append(tokens, token1)
 
 	// get the second token if there is one, otherwise only get songs from user1
-	if(code2 != ""){
+	if code2 != "" {
 		token2, err := s.fetchAccessToken(code2)
 		if err != nil {
 			return nil, fmt.Errorf("error getting second access token: %v", err)
@@ -44,6 +45,8 @@ func (s *AuthService) GetAccessTokens(code1, code2 string) ([]shared.GetAccessTo
 
 // fetchAccessToken run a spotify request to obtain access token
 func (s *AuthService) fetchAccessToken(code string) (shared.GetAccessTokensResponse, error) {
+	fmt.Printf("fetchAccessToken has been called \n")
+
 	data := url.Values{}
 	data.Set("grant_type", "authorization_code")
 	data.Set("code", code)
@@ -84,6 +87,9 @@ func (s *AuthService) fetchAccessToken(code string) (shared.GetAccessTokensRespo
 	if !ok || !ok2 {
 		return shared.GetAccessTokensResponse{}, fmt.Errorf("access_token o refresh_token missing in response")
 	}
+
+	fmt.Printf("fetchAccessToken - accesstoken %s\n", accessToken)
+	fmt.Printf("fetchAccessToken - refreshtoken %s\n", refreshToken)
 
 	return shared.GetAccessTokensResponse{
 		AccessToken:  accessToken,

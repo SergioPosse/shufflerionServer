@@ -15,7 +15,7 @@ func NewSongsService(spotifyService domainSession.SpotifyService) domain.SongsRe
 }
 
 func (s *SongsService) GetRandomSongs(accessToken1 string, accessToken2 string) ([]domain.Song, error) {
-
+	fmt.Printf("GetRandomSongs %s - %s...\n", accessToken1, accessToken2)
 	tracks1, err := s.spotifyService.FetchRandomSongs(accessToken1, 10)
 	if accessToken2 != "" {
 		tracks2, err2 := s.spotifyService.FetchRandomSongs(accessToken2, 10)
@@ -34,6 +34,8 @@ func (s *SongsService) GetRandomSongs(accessToken1 string, accessToken2 string) 
 		// if there is both accessToken1 and accessToken2 plus err2 is nil retrieve tracks1 interleave with tracks2
 		if( err2 == nil) {
 			responseIntercalated := interleaveArrays(tracks1, tracks2)
+			fmt.Printf("songs %s\n", responseIntercalated)
+
 			return responseIntercalated, nil
 		}
 	}
@@ -42,6 +44,7 @@ func (s *SongsService) GetRandomSongs(accessToken1 string, accessToken2 string) 
 		return nil, err
 	}
 	// if there is only accessToken1 retrieve tracks1 only
+	fmt.Printf("songs %s\n", tracks1)
 	return tracks1, nil
 }
 
