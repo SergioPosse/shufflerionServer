@@ -22,6 +22,8 @@ type SpotifyResponse struct {
 			Artists []struct {
 				Name string `json:"name"`
 			} `json:"artists"`
+			Duration int `json:"duration_ms"`
+			Explicit bool `json:"explicit`
 			Album struct {
 				Images []struct {
 					Url string `json:"url"`
@@ -110,6 +112,8 @@ func (s *SpotifyService) FetchRandomSongs(accessToken string, quantity int) ([]d
 				Artist: item.Track.Artists[0].Name,
 				Url:    item.Track.Uri,
 				Image:  item.Track.Album.Images[0].Url,
+				Duration: item.Track.Duration,
+				Explicit: item.Track.Explicit,
 			}
 			tracks = append(tracks, track)
 		}
