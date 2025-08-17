@@ -16,9 +16,9 @@ func NewSongsService(spotifyService domainSession.SpotifyService) domain.SongsRe
 
 func (s *SongsService) GetRandomSongs(accessToken1 string, accessToken2 string) ([]domain.Song, error) {
 	fmt.Printf("GetRandomSongs %s - %s...\n", accessToken1, accessToken2)
-	tracks1, err := s.spotifyService.FetchRandomSongs(accessToken1, 10)
+	tracks1, err := s.spotifyService.FetchRandomSongs(accessToken1, 100)
 	if accessToken2 != "" {
-		tracks2, err2 := s.spotifyService.FetchRandomSongs(accessToken2, 10)
+		tracks2, err2 := s.spotifyService.FetchRandomSongs(accessToken2, 100)
 
 		if err != nil && err2 != nil {
 			var combinedErr error
