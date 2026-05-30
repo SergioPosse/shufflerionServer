@@ -18,7 +18,8 @@ func StartServer(mux *http.ServeMux) {
 		AllowedOrigins: []string{
 			"http://localhost:3000",
 			"http://localhost",
-			"https://shufflerionserver.onrender.com"},
+			"https://shufflerionserver.onrender.com",
+			"https://shufflerion-front.onrender.com"},
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
 		AllowedHeaders: []string{"Content-Type", "Authorization"},
 	})
