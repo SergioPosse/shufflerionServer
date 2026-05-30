@@ -6,7 +6,7 @@ import (
 	domainSession "shufflerion/modules/session/domain"
 )
 
-type SongsService struct{
+type SongsService struct {
 	spotifyService domainSession.SpotifyService
 }
 
@@ -15,36 +15,39 @@ func NewSongsService(spotifyService domainSession.SpotifyService) domain.SongsRe
 }
 
 func (s *SongsService) GetRandomSongs(accessToken1 string, accessToken2 string) ([]domain.Song, error) {
-	fmt.Printf("GetRandomSongs %s - %s...\n", accessToken1, accessToken2)
-	tracks1, err := s.spotifyService.FetchRandomSongs(accessToken1, 100)
+	fmt.Printf("🎲 GetRandomSongs: fetching songs for user1\n")
+	tracks1, err := s.spotifyService.FetchRandomSongs(accessToken1, 15)
+	if err != nil {
+		fmt.Printf("❌ GetRandomSongs: error fetching user1 songs: %v\n", err)
+	} else {
+		fmt.Printf("✅ GetRandomSongs: got %d songs from user1\n", len(tracks1))
+	}
+
 	if accessToken2 != "" {
-		tracks2, err2 := s.spotifyService.FetchRandomSongs(accessToken2, 100)
+		fmt.Printf("🎲 GetRandomSongs: fetching songs for user2\n")
+		tracks2, err2 := s.spotifyService.FetchRandomSongs(accessToken2, 15)
+		if err2 != nil {
+			fmt.Printf("❌ GetRandomSongs: error fetching user2 songs: %v\n", err2)
+		} else {
+			fmt.Printf("✅ GetRandomSongs: got %d songs from user2\n", len(tracks2))
+		}
 
 		if err != nil && err2 != nil {
-			var combinedErr error
-			if err != nil && err2 != nil {
-				combinedErr = fmt.Errorf("error getting track: %v, %v", err, err2)
-			} else if err != nil {
-				combinedErr = fmt.Errorf("error getting track: %v", err)
-			} else {
-				combinedErr = fmt.Errorf("error getting track: %v", err2)
-			}
-			return nil, combinedErr
+			return nil, fmt.Errorf("error getting tracks from both users: user1=%v, user2=%v", err, err2)
 		}
-		// if there is both accessToken1 and accessToken2 plus err2 is nil retrieve tracks1 interleave with tracks2
-		if( err2 == nil) {
-			responseIntercalated := interleaveArrays(tracks1, tracks2)
-			fmt.Printf("songs %s\n", responseIntercalated)
 
-			return responseIntercalated, nil
+		if err2 == nil {
+			mixed := interleaveArrays(tracks1, tracks2)
+			fmt.Printf("🎵 GetRandomSongs: mixed playlist has %d songs (%d user1 + %d user2)\n", len(mixed), len(tracks1), len(tracks2))
+			return mixed, nil
 		}
 	}
 
 	if err != nil {
 		return nil, err
 	}
-	// if there is only accessToken1 retrieve tracks1 only
-	fmt.Printf("songs %s\n", tracks1)
+
+	fmt.Printf("🎵 GetRandomSongs: single-user playlist has %d songs\n", len(tracks1))
 	return tracks1, nil
 }
 

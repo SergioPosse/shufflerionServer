@@ -22,9 +22,9 @@ type SpotifyResponse struct {
 			Artists []struct {
 				Name string `json:"name"`
 			} `json:"artists"`
-			Duration int `json:"duration_ms"`
-			Explicit bool `json:"explicit`
-			Album struct {
+			Duration int  `json:"duration_ms"`
+			Explicit bool `json:"explicit"`
+			Album    struct {
 				Images []struct {
 					Url string `json:"url"`
 				} `json:"images"`
@@ -48,8 +48,8 @@ func NewSpotifyService(cfg *config.Config) domain.SpotifyService {
 func (s *SpotifyService) FetchRandomSongs(accessToken string, quantity int) ([]domainSong.Song, error) {
 	client := &http.Client{}
 
+	// First request: get total track count for this user
 	url := fmt.Sprintf("%s0", s.config.APIURL_GET_SONGS)
-
 	firstRequest, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request for get tracks: %v", err)
@@ -62,12 +62,12 @@ func (s *SpotifyService) FetchRandomSongs(accessToken string, quantity int) ([]d
 	}
 	defer resp.Body.Close()
 
-	var firstResponse SpotifyResponse
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error reading response: %v", err)
 	}
 
+	var firstResponse SpotifyResponse
 	err = json.Unmarshal(body, &firstResponse)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing response: %v", err)
@@ -75,43 +75,64 @@ func (s *SpotifyService) FetchRandomSongs(accessToken string, quantity int) ([]d
 
 	totalTracks := firstResponse.Total
 	if totalTracks == 0 {
+		fmt.Printf("⚠️  FetchRandomSongs: account has 0 liked songs\n")
 		return nil, fmt.Errorf("there is no tracks in the account")
 	}
+	fmt.Printf("🎵 FetchRandomSongs: account has %d liked songs, fetching %d random\n", totalTracks, quantity)
 
 	randSource := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var tracks []domainSong.Song
+	skipped := 0
+
 	for i := 0; i < quantity; i++ {
 		offset := randSource.Intn(totalTracks) + 1
 		url := s.config.APIURL_GET_SONGS + strconv.Itoa(offset)
 
 		request, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			return nil, fmt.Errorf("error creating request for get tracks: %v", err)
+			fmt.Printf("⚠️  FetchRandomSongs: error creating request at offset %d: %v\n", offset, err)
+			continue
 		}
 		request.Header.Set("Authorization", "Bearer "+accessToken)
+
 		resp, err := client.Do(request)
 		if err != nil {
-			return nil, fmt.Errorf("error in getting tracks request: %v", err)
+			fmt.Printf("⚠️  FetchRandomSongs: error fetching offset %d: %v\n", offset, err)
+			continue
 		}
-		defer resp.Body.Close()
+
+		body, err = io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			fmt.Printf("⚠️  FetchRandomSongs: error reading body at offset %d: %v\n", offset, err)
+			continue
+		}
 
 		var response SpotifyResponse
-		body, err = io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, fmt.Errorf("error reading tracks response: %v", err)
-		}
-
 		err = json.Unmarshal(body, &response)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing tracks response: %v", err)
+			fmt.Printf("⚠️  FetchRandomSongs: error parsing body at offset %d: %v\n", offset, err)
+			continue
 		}
 
 		for _, item := range response.Items {
+			// Guard: skip tracks with missing required fields to avoid index-out-of-range panics
+			if len(item.Track.Artists) == 0 {
+				fmt.Printf("⚠️  FetchRandomSongs: skipping track '%s' — no artists\n", item.Track.Name)
+				skipped++
+				continue
+			}
+			if len(item.Track.Album.Images) == 0 {
+				fmt.Printf("⚠️  FetchRandomSongs: skipping track '%s' — no album images\n", item.Track.Name)
+				skipped++
+				continue
+			}
+
 			track := domainSong.Song{
-				Title:  item.Track.Name,
-				Artist: item.Track.Artists[0].Name,
-				Url:    item.Track.Uri,
-				Image:  item.Track.Album.Images[0].Url,
+				Title:    item.Track.Name,
+				Artist:   item.Track.Artists[0].Name,
+				Url:      item.Track.Uri,
+				Image:    item.Track.Album.Images[0].Url,
 				Duration: item.Track.Duration,
 				Explicit: item.Track.Explicit,
 			}
@@ -119,6 +140,7 @@ func (s *SpotifyService) FetchRandomSongs(accessToken string, quantity int) ([]d
 		}
 	}
 
+	fmt.Printf("✅ FetchRandomSongs: built %d songs (%d skipped due to missing data)\n", len(tracks), skipped)
 	return tracks, nil
 }
 

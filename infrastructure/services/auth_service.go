@@ -22,21 +22,26 @@ func NewAuthService(cfg *config.Config) *AuthService {
 func (s *AuthService) GetAccessTokens(code1, code2 string) ([]shared.GetAccessTokensResponse, error) {
 	tokens := []shared.GetAccessTokensResponse{}
 
-	// get the first token
+	fmt.Printf("🔑 GetAccessTokens: exchanging code for user1\n")
 	token1, err := s.fetchAccessToken(code1)
 	if err != nil {
+		fmt.Printf("❌ GetAccessTokens: user1 token exchange failed: %v\n", err)
 		return nil, fmt.Errorf("error getting first access token: %v", err)
 	}
+	fmt.Printf("✅ GetAccessTokens: user1 token obtained\n")
 	tokens = append(tokens, token1)
 
-	// get the second token if there is one, otherwise only get songs from user1
 	if code2 != "" {
+		fmt.Printf("🔑 GetAccessTokens: exchanging code for user2\n")
 		token2, err := s.fetchAccessToken(code2)
 		if err != nil {
+			fmt.Printf("❌ GetAccessTokens: user2 token exchange failed: %v\n", err)
 			return nil, fmt.Errorf("error getting second access token: %v", err)
 		}
+		fmt.Printf("✅ GetAccessTokens: user2 token obtained\n")
 		tokens = append(tokens, token2)
 	} else {
+		fmt.Printf("ℹ️  GetAccessTokens: no code2 provided, using placeholder for user2\n")
 		tokens = append(tokens, shared.GetAccessTokensResponse{AccessToken: "notokensetted", RefreshToken: "notokensetted"})
 	}
 
@@ -45,7 +50,7 @@ func (s *AuthService) GetAccessTokens(code1, code2 string) ([]shared.GetAccessTo
 
 // fetchAccessToken run a spotify request to obtain access token
 func (s *AuthService) fetchAccessToken(code string) (shared.GetAccessTokensResponse, error) {
-	fmt.Printf("fetchAccessToken has been called \n")
+	fmt.Printf("🔄 fetchAccessToken: calling Spotify token endpoint\n")
 
 	data := url.Values{}
 	data.Set("grant_type", "authorization_code")
@@ -88,8 +93,7 @@ func (s *AuthService) fetchAccessToken(code string) (shared.GetAccessTokensRespo
 		return shared.GetAccessTokensResponse{}, fmt.Errorf("access_token o refresh_token missing in response")
 	}
 
-	fmt.Printf("fetchAccessToken - accesstoken %s\n", accessToken)
-	fmt.Printf("fetchAccessToken - refreshtoken %s\n", refreshToken)
+	fmt.Printf("✅ fetchAccessToken: token obtained successfully\n")
 
 	return shared.GetAccessTokensResponse{
 		AccessToken:  accessToken,
