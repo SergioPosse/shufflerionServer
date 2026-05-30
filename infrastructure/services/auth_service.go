@@ -48,6 +48,60 @@ func (s *AuthService) GetAccessTokens(code1, code2 string) ([]shared.GetAccessTo
 	return tokens, nil
 }
 
+func (s *AuthService) RefreshAccessToken(refreshToken string) (shared.GetAccessTokensResponse, error) {
+	fmt.Printf("🔄 RefreshAccessToken: refreshing token via Spotify\n")
+
+	data := url.Values{}
+	data.Set("grant_type", "refresh_token")
+	data.Set("refresh_token", refreshToken)
+	data.Set("client_id", s.config.ClientID)
+	data.Set("client_secret", s.config.ClientSecret)
+
+	req, err := http.NewRequest("POST", s.config.APIURL, strings.NewReader(data.Encode()))
+	if err != nil {
+		return shared.GetAccessTokensResponse{}, fmt.Errorf("error creating refresh request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return shared.GetAccessTokensResponse{}, fmt.Errorf("error in refresh request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return shared.GetAccessTokensResponse{}, fmt.Errorf("error reading refresh response: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return shared.GetAccessTokensResponse{}, fmt.Errorf("refresh failed, status: %d, body: %s", resp.StatusCode, body)
+	}
+
+	var response map[string]interface{}
+	if err := json.Unmarshal(body, &response); err != nil {
+		return shared.GetAccessTokensResponse{}, fmt.Errorf("error parsing refresh response: %v", err)
+	}
+
+	accessToken, ok := response["access_token"].(string)
+	if !ok {
+		return shared.GetAccessTokensResponse{}, fmt.Errorf("access_token missing in refresh response")
+	}
+
+	// Spotify may or may not rotate the refresh token — fall back to the original if not present
+	newRefreshToken, _ := response["refresh_token"].(string)
+	if newRefreshToken == "" {
+		newRefreshToken = refreshToken
+	}
+
+	fmt.Printf("✅ RefreshAccessToken: token refreshed successfully\n")
+	return shared.GetAccessTokensResponse{
+		AccessToken:  accessToken,
+		RefreshToken: newRefreshToken,
+	}, nil
+}
+
 // fetchAccessToken run a spotify request to obtain access token
 func (s *AuthService) fetchAccessToken(code string) (shared.GetAccessTokensResponse, error) {
 	fmt.Printf("🔄 fetchAccessToken: calling Spotify token endpoint\n")

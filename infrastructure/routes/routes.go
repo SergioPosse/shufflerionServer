@@ -12,8 +12,13 @@ func RegisterRoutes(authController *controllers.AuthController, songsController 
 	mux := http.NewServeMux()
 
 	// http
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+	})
 	mux.HandleFunc("/songs/random", songsController.GetRandomSongs)
 	mux.HandleFunc("/auth/tokens", authController.GetAccessTokens)
+	mux.HandleFunc("/auth/refresh", authController.RefreshToken)
 	mux.HandleFunc("/session/create", sessionController.CreateSession)
 	mux.HandleFunc("/session/{id}", sessionController.GetSessionById)
 	mux.HandleFunc("/session/update", sessionController.UpdateSession)

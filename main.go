@@ -40,7 +40,7 @@ func main() {
 	// auth module injection
 	authService := services.NewAuthService(cfg)
 	getAccessTokensUC := auth.NewGetAccessTokensUseCase(authService)
-	authController := controllers.NewAuthController(getAccessTokensUC)
+	authController := controllers.NewAuthController(getAccessTokensUC, authService)
 
 	// song module injection
 	songsService := services.NewSongsService(spotifyService)
